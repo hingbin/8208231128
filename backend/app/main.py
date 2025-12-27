@@ -12,7 +12,9 @@ from fastapi import FastAPI, Depends, HTTPException, Query, Request, Body
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 # Path bootstrap so importing app.main works
 BASE_DIR = Path(__file__).resolve().parent
@@ -24,7 +26,7 @@ elif str(PROJECT_ROOT) not in sys.path:
 
 from app.config import settings
 from app.db import get_engine, get_control_engine, get_all_db_keys
-from app.schemas import LoginIn, RegisterIn, TokenOut, ProductIn, DBKey
+from app.schemas import LoginIn, RegisterIn, TokenOut, ProductIn, DBKey, SQLQueryIn
 from app.auth import (
     verify_password, create_access_token, ensure_admin_seeded,
     get_current_user, require_admin, hash_password
@@ -813,6 +815,49 @@ def _run_top_customers_query(db: DBKey, days: int, limit: int) -> dict:
         normalized_rows.append(item)
 
     return {"sql": sql, "rows": normalized_rows, "db": db, "days": days, "limit": limit}
+
+def _normalize_sql(sql: str) -> str:
+    cleaned = (sql or "").strip()
+    if cleaned.endswith(";"):
+        cleaned = cleaned.rstrip(" ;\n\t")
+    return cleaned
+
+def _ensure_select_sql(sql: str):
+    normalized = sql.lstrip().lower()
+    if normalized.startswith("with") or normalized.startswith("select"):
+        return
+    raise HTTPException(status_code=400, detail="目前仅支持 SELECT/CTE 查询")
+
+@app.post("/queries/run")
+def run_custom_query(payload: SQLQueryIn = Body(...), user=Depends(require_admin)):
+    sql_text = _normalize_sql(payload.sql)
+    if not sql_text:
+        raise HTTPException(status_code=400, detail="SQL 不能为空")
+    _ensure_select_sql(sql_text)
+    limit = max(1, min(payload.limit or 200, 1000))
+    eng = get_engine(payload.db)
+    started = datetime.now(timezone.utc)
+    try:
+        with eng.begin() as conn:
+            result = conn.execute(text(sql_text))
+            columns = list(result.keys())
+            rows = result.mappings().fetchmany(limit)
+    except SQLAlchemyError as exc:
+        detail = getattr(exc, "orig", None) or str(exc)
+        raise HTTPException(status_code=400, detail=f"SQL 执行失败：{detail}")
+    took_ms = (datetime.now(timezone.utc) - started).total_seconds() * 1000
+    payload_rows = jsonable_encoder([dict(row) for row in rows])
+    truncated = len(rows) >= limit
+    return {
+        "db": payload.db,
+        "sql": sql_text,
+        "limit": limit,
+        "columns": columns,
+        "rows": payload_rows,
+        "row_count": len(payload_rows),
+        "truncated": truncated,
+        "took_ms": round(took_ms, 2),
+    }
 
 # ---------------- Complex SQL page (example) ----------------
 @app.get("/queries/top-customers")

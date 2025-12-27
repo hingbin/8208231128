@@ -35,3 +35,8 @@ class ConflictOut(BaseModel):
     target_db: str
     status: str
     created_at: str
+
+class SQLQueryIn(BaseModel):
+    db: DBKey
+    sql: str = Field(min_length=1, max_length=10000)
+    limit: int = Field(default=200, ge=1, le=1000)

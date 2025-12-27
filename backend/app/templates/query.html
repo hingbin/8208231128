@@ -1,80 +1,96 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% set sample_sql %}
+WITH recent_orders AS (
+  SELECT
+    o.customer_id,
+    SUM(oi.quantity * oi.price) AS total_amount,
+    COUNT(*) AS item_count
+  FROM orders o
+  JOIN order_items oi ON oi.order_id = o.order_id
+  WHERE o.updated_at >= CURRENT_TIMESTAMP - INTERVAL '30 DAY'
+  GROUP BY o.customer_id
+)
+SELECT
+  c.customer_id,
+  c.customer_name,
+  r.total_amount,
+  r.item_count
+FROM customers c
+JOIN recent_orders r ON r.customer_id = c.customer_id
+ORDER BY r.total_amount DESC;
+{% endset %}
 {% block content %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="h5 m-0">复杂 SQL 查询演示</h2>
-    <a class="btn btn-sm btn-outline-primary" href="/docs">查看 API</a>
+  <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+      <p class="badge rounded-pill text-bg-light mb-2">复杂 SQL 工具箱</p>
+      <h2 class="h5 m-0">SQL Runner + Top Customers 示例</h2>
+    </div>
+    <a class="btn btn-sm btn-outline-primary" href="/docs">API 文档</a>
   </div>
 
   <div class="card shadow-sm mb-4">
     <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label class="form-label">目标数据库</label>
-          <select class="form-select" name="db">
-            <option value="mysql" {% if db == 'mysql' %}selected{% endif %}>MySQL</option>
-            <option value="postgres" {% if db == 'postgres' %}selected{% endif %}>PostgreSQL</option>
-            <option value="mssql" {% if db == 'mssql' %}selected{% endif %}>SQL Server</option>
+      <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center mb-3">
+        <div>
+          <p class="badge text-bg-secondary rounded-pill mb-2">自定义 SQL</p>
+          <h3 class="h5 mb-0">输入任意 SELECT / WITH 语句</h3>
+          <small class="text-muted">已开启只读模式，支持嵌套子查询、CTE、窗口函数等高级语法</small>
+        </div>
+        <div class="text-muted small">安全提示：仅管理员可执行，最多返回 1000 行</div>
+      </div>
+      <form id="sql-form" class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label" for="sql-db">目标数据库</label>
+          <select class="form-select" id="sql-db">
+            <option value="mysql">MySQL</option>
+            <option value="postgres">PostgreSQL</option>
+            <option value="mssql">SQL Server</option>
           </select>
         </div>
         <div class="col-md-3">
-          <label class="form-label">统计天数</label>
-          <input class="form-control" type="number" name="days" min="1" max="365" value="{{ days }}">
+          <label class="form-label" for="sql-limit">最大返回行数</label>
+          <input class="form-control" id="sql-limit" type="number" min="1" max="1000" value="200">
         </div>
-        <div class="col-md-3">
-          <label class="form-label">前 N 名客户</label>
-          <input class="form-control" type="number" name="limit" min="1" max="50" value="{{ limit }}">
+        <div class="col-md-6">
+          <label class="form-label d-flex justify-content-between align-items-center" for="sql-input">
+            查询语句
+            <button type="button" class="btn btn-link btn-sm text-decoration-none" id="sql-fill-sample">填入示例</button>
+          </label>
+          <textarea class="form-control font-monospace" id="sql-input" rows="8" placeholder="WITH recent_orders AS (...)">{{ sample_sql.strip() }}</textarea>
+          <div class="form-text">示例使用 Postgres/MySQL 风格日期函数，如需 SQL Server 可改为 <code>DATEADD(day,-30,SYSDATETIME())</code>。</div>
         </div>
-        <div class="col-md-2 d-grid">
-          <button class="btn btn-primary" type="submit">运行查询</button>
+        <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <small class="text-muted">提示：暂仅允许单条 SELECT/CTE 语句；如需写 TOP/TIES、窗口函数均可直接输入。</small>
+          <button class="btn btn-primary" type="submit" id="sql-run">执行 SQL</button>
         </div>
       </form>
+      <div id="sql-status" class="alert alert-info d-none" role="status"></div>
     </div>
   </div>
 
-  <div class="card shadow-sm">
+  <div class="card shadow-sm mb-4">
     <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h3 class="h6 mb-0">查询结果</h3>
+        <span class="badge text-bg-light" id="sql-result-meta">尚未执行</span>
+      </div>
       <div class="table-responsive">
-        <table class="table table-sm align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>客户</th>
-              <th>订单金额（{{ db|upper }}）</th>
-            </tr>
+        <table class="table table-sm table-striped align-middle">
+          <thead id="sql-result-head">
+            <tr><th>列名</th></tr>
           </thead>
-          <tbody>
-            {% for row in rows %}
-              <tr>
-                <td>{{ loop.index }}</td>
-                <td>
-                  <div class="fw-semibold">{{ row.customer_name }}</div>
-                  <div class="text-muted small">{{ row.customer_id }}</div>
-                </td>
-                <td>¥ {{ "%.2f"|format(row.total_amount or 0) }}</td>
-              </tr>
-            {% else %}
-              <tr>
-                <td colspan="3" class="text-center text-muted">暂无满足条件的订单数据</td>
-              </tr>
-            {% endfor %}
+          <tbody id="sql-result-body">
+            <tr id="sql-result-empty">
+              <td class="text-muted text-center">暂无数据，请在上方输入 SQL 后执行</td>
+            </tr>
           </tbody>
         </table>
       </div>
-      <div class="small text-muted mt-3">
-        执行 SQL（多表连接 + 嵌套子查询 + 聚合），已通过 customers / orders / order_items 上的索引优化：
-        <pre class="mt-2"><code>{{ sql }}</code></pre>
-      </div>
     </div>
   </div>
+
 {% endblock %}
 {% block scripts %}
-  <script>
-    (() => {
-      const token = localStorage.getItem('sync_admin_token');
-      if (!token) {
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        window.location.href = `/ui/login?next=${next}`;
-      }
-    })();
-  </script>
+  <script src="/static/js/query.js"></script>
 {% endblock %}
+

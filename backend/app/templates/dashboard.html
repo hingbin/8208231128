@@ -85,6 +85,69 @@
   <div class="card card-dashboard mt-4">
     <div class="card-body">
       <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
+        <div>
+          <p class="badge rounded-pill text-bg-light mb-2">复杂 SQL</p>
+          <h2 class="h5 mb-0">Top Customers 聚合查询</h2>
+          <small class="text-muted">演示多表 JOIN + 嵌套子查询 + 聚合 + 索引优化</small>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="/ui/query">全屏模式</a>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mb-3" id="query-highlights">
+        <span class="badge text-bg-light">等待执行查询...</span>
+      </div>
+      <form id="query-form" class="row g-3 align-items-end">
+        <div class="col-sm-4">
+          <label class="form-label" for="query-db">目标数据库</label>
+          <select class="form-select" name="db" id="query-db">
+            <option value="mysql">MySQL</option>
+            <option value="postgres">PostgreSQL</option>
+            <option value="mssql">SQL Server</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <label class="form-label" for="query-days">统计天数</label>
+          <input class="form-control" id="query-days" type="number" name="days" min="1" max="365" value="30">
+        </div>
+        <div class="col-sm-3">
+          <label class="form-label" for="query-limit">前 N 名客户</label>
+          <input class="form-control" id="query-limit" type="number" name="limit" min="1" max="50" value="10">
+        </div>
+        <div class="col-sm-2 d-grid">
+          <button class="btn btn-primary" type="submit">运行查询</button>
+        </div>
+      </form>
+      <div id="query-status" class="alert alert-info mt-3 d-none" role="status"></div>
+
+      <div class="table-responsive mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <h3 class="h6 mb-0 text-muted">客户订单聚合（<span id="query-meta">DB · 0 条</span>）</h3>
+          <span class="badge text-bg-light">API：/queries/top-customers</span>
+        </div>
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th>客户</th>
+              <th>订单金额</th>
+            </tr>
+          </thead>
+          <tbody id="query-body">
+            <tr>
+              <td colspan="3" class="text-center text-muted">暂无数据，请先运行查询</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="small text-muted mt-3">
+        SQL 预览：
+        <pre class="mt-2 mb-0"><code id="query-sql">-- 等待执行查询...</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-dashboard mt-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
         <h2 class="h5 mb-0">待处理冲突</h2>
         <small class="text-muted">支持一键采用任意数据库，或手动编辑 JSON</small>
       </div>
@@ -119,4 +182,5 @@
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="/static/js/dashboard.js"></script>
+  <script src="/static/js/query.js"></script>
 {% endblock %}
