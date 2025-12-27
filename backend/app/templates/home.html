@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="p-4 bg-white rounded-3 shadow-sm">
+    <h1 class="h4 mb-3">多数据库同步平台（骨架）</h1>
+    <p class="mb-1">PC 端：查看/处理冲突（管理员通过 API 登录后可处理）。</p>
+    <p class="mb-3">移动端：同一个页面自适应，<b>日报</b>提供图表。</p>
+
+    <div class="alert alert-secondary small mb-0">
+      默认管理员：<b>admin / admin123</b>（登录请走 Swagger：/docs → POST /auth/login）
+      <br/>邮件本地查看：<b>MailHog</b> http://localhost:8025
+    </div>
+  </div>
+{% endblock %}

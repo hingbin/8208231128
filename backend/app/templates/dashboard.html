@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+  <div id="conflict-alert" class="notification-banner mb-3 d-none">
+    <span class="badge bg-danger rounded-pill">冲突告警</span>
+    <span id="conflict-alert-text">检测到新的冲突，请尽快处理。</span>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card card-dashboard h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h2 class="h5 mb-0">同步健康概览</h2>
+              <small class="text-muted" id="overview-time"></small>
+            </div>
+            <span class="status-pill ok" id="overview-status">同步正常</span>
+          </div>
+          <div class="row g-3" id="db-summary">
+            <!-- filled by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card card-dashboard h-100">
+        <div class="card-body">
+          <h2 class="h6 mb-3">冲突情况</h2>
+          <div class="vstack gap-2" id="conflict-summary">
+            <span class="text-muted">正在加载...</span>
+          </div>
+          <hr>
+          <h2 class="h6 mb-3">变更趋势</h2>
+          <div id="report-mini"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-dashboard mt-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
+        <h2 class="h5 mb-0">多库数据对比（最近商品）</h2>
+        <small class="text-muted">实时查看三个数据库在价格/库存等字段上的差异</small>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-highlight align-middle text-center">
+          <thead>
+            <tr>
+              <th class="text-start">商品</th>
+              <th>MySQL</th>
+              <th>PostgreSQL</th>
+              <th>SQL Server</th>
+            </tr>
+          </thead>
+          <tbody id="product-matrix">
+            <tr><td colspan="4" class="text-muted">加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-dashboard mt-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
+        <h2 class="h5 mb-0">每日同步趋势</h2>
+        <small class="text-muted">近 14 天 变更 VS 冲突</small>
+      </div>
+      <canvas id="daily-chart" height="120"></canvas>
+      <div id="daily-chart-empty" class="text-muted small mt-2 d-none">暂无日报数据。</div>
+      <hr class="my-4">
+      <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
+        <h3 class="h6 mb-0 text-muted">&#25968;&#25454;&#24211; 7 &#24352;&#34920;&#25968;&#37327;</h3>
+        <small class="text-muted">&#26742;&#29305;&#22270; &#183; &#25968;&#25454;&#26469;&#28304; change_log/conflicts</small>
+      </div>
+      <canvas id="table-chart" height="120"></canvas>
+      <div id="table-chart-empty" class="text-muted small mt-2 d-none">&#26242;&#26080;&#25968;&#25454;&#65292;&#35831;&#20808;&#35302;&#21457;&#19968;&#27425;&#21516;&#27493;&#12290;</div>
+      <div id="table-volume-grid" class="row row-cols-2 row-cols-md-3 g-2 mt-3">
+        <div class="text-muted small">&#27491;&#22312;&#26356;&#26032;&#21015;&#34920;&#25968;&#25454;...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-dashboard mt-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between flex-wrap align-items-center mb-3">
+        <h2 class="h5 mb-0">待处理冲突</h2>
+        <small class="text-muted">支持一键采用任意数据库，或手动编辑 JSON</small>
+      </div>
+      <div id="conflict-list">
+        <p class="text-muted mb-0">数据加载中...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手动修复模态框 -->
+  <div class="modal fade" id="manualModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">手动修复冲突</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small mb-2">请将下方 JSON 调整为希望同步到所有数据库的最终数据。</p>
+          <textarea class="form-control" id="manualPayload" rows="8"></textarea>
+          <input type="hidden" id="manualConflictId">
+          <div class="form-text">✔ 支持所有同步表：users、customers、products、orders、order_items 等。请确保 JSON 中包含正确的主键字段（如 <code>product_id</code>）。</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="manualSubmit">提交并同步</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/static/js/dashboard.js"></script>
+{% endblock %}

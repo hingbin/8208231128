@@ -1,0 +1,48 @@
+-- 统一业务表定义（供 CloudBeaver 直接执行的示例数据脚本）
+-- 只需要表已按 db/mysql|postgres|mssql/01_schema.sql 建好，本文件只负责插入示例数据。
+
+-- 关系说明
+-- users：平台账号（含 role 字段）
+-- customers 1 --- n orders
+-- orders    1 --- n order_items
+-- products  1 --- n order_items
+
+-- 用户
+INSERT INTO users (user_id, username, password_hash, role, created_at) VALUES
+('1', 'admin',  'hash_admin_xxx',  'admin',  '2025-12-01 09:00:00'),
+('2', 'alice',  'hash_alice_xxx',  'normal', '2025-12-02 09:00:00'),
+('3', 'bob',    'hash_bob_xxx',    'normal', '2025-12-03 09:00:00'),
+('4', 'carol',  'hash_carol_xxx',  'normal', '2025-12-04 09:00:00'),
+('5', 'david',  'hash_david_xxx',  'normal', '2025-12-05 09:00:00');
+
+-- 客户
+INSERT INTO customers (customer_id, customer_name, email, phone, created_at) VALUES
+('101', '张三', 'zhangsan@example.com', '13800000001', '2025-12-01 10:00:00'),
+('102', '李四', 'lisi@example.com',     '13800000002', '2025-12-02 10:00:00'),
+('103', '王五', 'wangwu@example.com',   '13800000003', '2025-12-03 10:00:00'),
+('104', '赵六', 'zhaoliu@example.com',  '13800000004', '2025-12-04 10:00:00'),
+('105', '孙七', 'sunqi@example.com',    '13800000005', '2025-12-05 10:00:00');
+
+-- 商品
+INSERT INTO products (product_id, product_name, price, stock, updated_at) VALUES
+('201', '机械键盘',    399.00, 50, '2025-12-10 12:00:00'),
+('202', '无线鼠标',     99.00, 80, '2025-12-10 12:00:00'),
+('203', '27寸显示器', 1299.00, 20, '2025-12-10 12:00:00'),
+('204', 'USB-C 扩展坞', 159.00, 60, '2025-12-10 12:00:00'),
+('205', '移动硬盘 1TB', 499.00, 35, '2025-12-10 12:00:00');
+
+-- 订单
+INSERT INTO orders (order_id, customer_id, order_date, total_amount, status) VALUES
+('301', '101', '2025-12-15 14:00:00',  399.00, 'PAID'),
+('302', '102', '2025-12-15 15:00:00',  198.00, 'PAID'),
+('303', '103', '2025-12-16 10:30:00', 1299.00, 'NEW'),
+('304', '104', '2025-12-16 11:00:00',  318.00, 'SHIPPED'),
+('305', '105', '2025-12-17 09:20:00',  499.00, 'PAID');
+
+-- 明细
+INSERT INTO order_items (item_id, order_id, product_id, quantity, price) VALUES
+('401', '301', '201', 1, 399.00),   -- 1 * 399
+('402', '302', '202', 2,  99.00),   -- 2 * 99 = 198
+('403', '303', '203', 1, 1299.00),  -- 1 * 1299
+('404', '304', '204', 2, 159.00),   -- 2 * 159 = 318
+('405', '305', '205', 1, 499.00);   -- 1 * 499

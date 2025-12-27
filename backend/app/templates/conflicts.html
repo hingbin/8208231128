@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="page-header mb-4 text-center">
+    <div class="w-100">
+      <p class="badge rounded-pill text-bg-light mb-2">冲突检测</p>
+      <h1 class="h3 fw-bold mb-2">跨库冲突监控</h1>
+      <p class="text-muted mb-0">实时查看未解决的冲突，支持邮件链接只读查看。</p>
+    </div>
+  </div>
+
+  {% if token_ok %}
+    <div class="alert alert-info small glass-card border-0">您通过邮件链接打开（只读）。需要处理请在文档内使用管理员身份。</div>
+  {% else %}
+    <div class="alert alert-secondary small glass-card border-0">数据来源：CONTROL_DB（.env 配置）。需要管理员登录 Token 才能查看与处理。</div>
+  {% endif %}
+
+  <div class="glass-card p-3 p-lg-4 soft-border">
+    <div id="conflicts-status" class="alert alert-secondary d-none mb-3 rounded-3"></div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr class="small text-muted">
+            <th style="width: 90px;">ID</th>
+            <th>表</th>
+            <th>主键</th>
+            <th>来源</th>
+            <th>目标</th>
+            <th>状态</th>
+            <th style="width: 180px;">时间</th>
+            <th style="width: 110px;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="conflicts-body">
+          <tr>
+            <td colspan="8" class="text-muted text-center py-4">加载中…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {% if not token_ok %}
+    <script src="/static/js/conflicts.js"></script>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="auth-hero rounded-4 p-4 p-lg-5 mb-4 shadow-soft">
+    <div class="row g-4 align-items-center flex-column flex-lg-row justify-content-center auth-shell">
+      <div class="col-lg-6">
+        <p class="badge rounded-pill text-bg-light mb-3">创建新账号</p>
+        <h1 class="display-6 fw-bold mb-3">注册同步控制台</h1>
+        <p class="text-muted mb-4">填写信息创建管理员账号，注册成功后即可直接进入控制台。</p>
+        <ul class="list-unstyled text-muted small vstack gap-2 mb-0">
+          <li>• 账号仅限内部使用，请妥善保管。</li>
+          <li>• 注册码请向管理员获取，防止外部滥用。</li>
+        </ul>
+      </div>
+      <div class="col-lg-6">
+        <div class="glass-card p-4 p-lg-5">
+          <h2 class="h4 fw-bold mb-3 text-center">注册</h2>
+          <p class="text-muted small text-center mb-4">请输入注册所需信息。</p>
+          <form id="register-form" class="vstack gap-3">
+            <div>
+              <label class="form-label">用户名</label>
+              <input class="form-control form-control-lg rounded-4" type="text" name="username" placeholder="设置管理员用户名" required>
+            </div>
+            <div>
+              <label class="form-label">密码</label>
+              <input class="form-control form-control-lg rounded-4" type="password" name="password" placeholder="不少于 6 位" required minlength="6">
+            </div>
+            <div>
+              <label class="form-label">注册码</label>
+              <input class="form-control form-control-lg rounded-4" type="text" name="registration_code" placeholder="请输入注册码" required>
+            </div>
+            <button class="btn btn-success btn-lg w-100 rounded-4" type="submit">注册并登录</button>
+          </form>
+          <div class="d-grid mt-3">
+            <a class="btn btn-outline-dark rounded-4" href="/ui/login">已有账号？返回登录</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="auth-status" class="alert mt-3" hidden></div>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/auth.js"></script>
+{% endblock %}

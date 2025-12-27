@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 m-0">复杂 SQL 查询演示</h2>
+    <a class="btn btn-sm btn-outline-primary" href="/docs">查看 API</a>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">目标数据库</label>
+          <select class="form-select" name="db">
+            <option value="mysql" {% if db == 'mysql' %}selected{% endif %}>MySQL</option>
+            <option value="postgres" {% if db == 'postgres' %}selected{% endif %}>PostgreSQL</option>
+            <option value="mssql" {% if db == 'mssql' %}selected{% endif %}>SQL Server</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">统计天数</label>
+          <input class="form-control" type="number" name="days" min="1" max="365" value="{{ days }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">前 N 名客户</label>
+          <input class="form-control" type="number" name="limit" min="1" max="50" value="{{ limit }}">
+        </div>
+        <div class="col-md-2 d-grid">
+          <button class="btn btn-primary" type="submit">运行查询</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>客户</th>
+              <th>订单金额（{{ db|upper }}）</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                  <div class="fw-semibold">{{ row.customer_name }}</div>
+                  <div class="text-muted small">{{ row.customer_id }}</div>
+                </td>
+                <td>¥ {{ "%.2f"|format(row.total_amount or 0) }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="3" class="text-center text-muted">暂无满足条件的订单数据</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="small text-muted mt-3">
+        执行 SQL（多表连接 + 嵌套子查询 + 聚合），已通过 customers / orders / order_items 上的索引优化：
+        <pre class="mt-2"><code>{{ sql }}</code></pre>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script>
+    (() => {
+      const token = localStorage.getItem('sync_admin_token');
+      if (!token) {
+        const next = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/ui/login?next=${next}`;
+      }
+    })();
+  </script>
+{% endblock %}

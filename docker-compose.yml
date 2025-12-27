@@ -1,0 +1,105 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: syncdb
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app_pw
+      MYSQL_ROOT_PASSWORD: root_pw
+    ports:
+      - "13306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/mysql:/docker-entrypoint-initdb.d
+    # 核心修正：添加了信任函数创建者的参数
+    command: [
+      "--default-authentication-plugin=mysql_native_password",
+      "--sql-mode=",
+      "--log-bin-trust-function-creators=1"
+    ]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: syncdb
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app_pw
+    ports:
+      - "15432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/postgres:/docker-entrypoint-initdb.d
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    ports:
+      - "14333:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  mssql-init:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - mssql
+    volumes:
+      - ./db/mssql:/scripts:ro
+    environment:
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+    entrypoint: ["/bin/bash", "/scripts/init.sh"]
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+  backend:
+    build: ./backend
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - postgres
+      - mssql-init
+      - mailhog
+    ports:
+      - "18000:8000"
+    volumes:
+      - ./backend:/app
+      - ./send_email.py:/app/send_email.py:ro
+
+  worker:
+    build: ./backend
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+      - postgres
+      - mssql-init
+      - mailhog
+    command: ["python", "-m", "app.sync.worker"]
+    volumes:
+      - ./backend:/app
+      - ./send_email.py:/app/send_email.py:ro
+
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: cloudbeaver
+    ports:
+      - "8978:8978"
+    depends_on:
+      - mysql
+      - postgres
+      - mssql
+    restart: unless-stopped
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+
+volumes:
+  mysql_data:
+  pg_data:
+  mssql_data:
+  cloudbeaver_data:

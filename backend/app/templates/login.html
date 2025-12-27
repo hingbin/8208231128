@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="auth-hero rounded-4 p-4 p-lg-5 mb-4 shadow-soft">
+    <div class="row g-4 align-items-center flex-column flex-lg-row justify-content-center auth-shell">
+      <div class="col-lg-6">
+        <p class="badge rounded-pill text-bg-light mb-3">安全同步 · 精准监控</p>
+        <h1 class="display-6 fw-bold mb-3">欢迎回来</h1>
+        <p class="text-muted mb-4">登录后即可进入「冲突检测」与「同步分析报表」，快速查看今日的同步状态与冲突概览。</p>
+        <div class="pill-stats d-flex flex-wrap gap-3">
+          <div class="pill-card">
+            <div class="small text-uppercase text-muted">冲突检测</div>
+            <div class="h5 mb-0">一键查看 / 邮件链接</div>
+          </div>
+          <div class="pill-card">
+            <div class="small text-uppercase text-muted">同步分析</div>
+            <div class="h5 mb-0">每日趋势 / 版本对齐</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="glass-card p-4 p-lg-5">
+          <h2 class="h4 fw-bold mb-3 text-center">账号登录</h2>
+          <p class="text-muted small text-center mb-4">请输入您的账号和密码完成登录。</p>
+          <form id="login-form" class="vstack gap-3">
+            <div>
+              <label class="form-label">用户名</label>
+              <input class="form-control form-control-lg rounded-4" type="text" name="username" placeholder="输入用户名" required>
+            </div>
+            <div>
+              <label class="form-label">密码</label>
+              <input class="form-control form-control-lg rounded-4" type="password" name="password" placeholder="输入密码" required>
+            </div>
+            <button class="btn btn-primary btn-lg w-100 rounded-4" type="submit">登录</button>
+          </form>
+          <div class="d-grid mt-3">
+            <a class="btn btn-outline-dark rounded-4" href="/ui/register">没有账号？前往注册</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="auth-status" class="alert mt-3" hidden></div>
+{% endblock %}
+{% block scripts %}
+  <script src="/static/js/auth.js"></script>
+{% endblock %}

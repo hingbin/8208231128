@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 计科2307张鸿斌
 
 
@@ -91,3 +92,41 @@ For open source projects, say how it is licensed.
 
 ## Project status
 If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+=======
+# 多数据库同步实验平台（PyCharm 版）
+
+一键拉起 MySQL / PostgreSQL / SQL Server、同步后台、冲突处理 UI、MailHog 以及 CloudBeaver，可快速验证三库间的触发器同步、冲突检测与邮件告警链路。
+
+## 快速开始
+- 复制环境变量：`cp .env.example .env`（或直接使用根目录 `.env` 已填默认值）。
+- 启动容器：`docker compose up -d --build`  
+  服务暴露端口：后台 18000、MySQL 13306、PostgreSQL 15432、SQL Server 14333、MailHog 8025、CloudBeaver 8978。
+- 访问入口：
+  - Swagger 文档：`http://localhost:18000/docs`
+  - Web 登录/注册：`http://localhost:18000/ui/login`（默认管理员 `admin / admin123`，注册码 `aaa`）
+  - 冲突中心：`http://localhost:18000/ui/conflicts`
+  - MailHog：`http://localhost:8025`
+  - CloudBeaver：`http://localhost:8978`（可直接运行 `database_table` 脚本导入样例数据）
+
+## 同步与冲突逻辑
+- 表范围：`users / customers / products / orders / order_items`，三库表结构保持一致（见 `db/mysql|postgres|mssql/01_schema.sql`）。
+- 触发器：各库 INSERT/UPDATE 时，若 `updated_by_db` 为本库标识，则写入 `change_log`，并在本库自增 `row_version`。来自其他库的写入会带着源库标识，因而不会产生回环日志。
+- worker：轮询每库 `change_log`，将变更应用到其他两库。若目标库 `row_version` 更高且 `updated_by_db` 不同，则记录到 `conflicts` 并发邮件。
+- 冲突处理：管理端可在 UI 或接口 `/conflicts/{id}/resolve` 选择胜出库，也可用 `/resolve/custom` 直接提交 JSON，后台会统一落盘到三库并标记冲突已解决。
+
+## 邮件告警
+- `services/emailer.py` 先尝试 Resend（使用 `.env` 中 `RESEND_API_KEY`），失败则调用根目录 `send_email.py`，最后回落 SMTP（默认 MailHog）。
+- 邮件正文附带带签名的 24h 链接，形如 `http://localhost:18000/ui/conflicts/{id}?t=...`，可直接跳到冲突详情。
+
+## 开发/调试
+- 只跑本地代码：`cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload`；另开终端运行 `python -m app.sync.worker`。
+- 切换控制库：修改 `.env` 中 `CONTROL_DB=postgres|mysql|mssql`，重启 backend/worker。
+
+## 脚本与数据
+- `database_table`：可在 CloudBeaver 一次性执行，插入一套基础演示数据（已修正表名、字段及中文字符）。
+- `db/*/01_schema.sql`：包含建表、索引、触发器与行版本策略；SQL Server 由 `db/mssql/init.sh` 自动执行。
+
+## 已知限制
+- 目前未同步 DELETE 操作；如需可在触发器与 `replicator.py` 中补充。
+- 冲突判定基于 `row_version`；若不同库同时写入且版本号相同，将按最后到达者覆盖，不会生成冲突记录。
+>>>>>>> 62309b3 (upload project)

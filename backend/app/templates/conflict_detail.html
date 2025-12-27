@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="h5 m-0">冲突详情 #{{ conflict_id }}</h2>
+    <a class="btn btn-sm btn-outline-secondary" href="/ui/conflicts{% if t %}?t={{t}}{% endif %}">返回列表</a>
+  </div>
+
+  {% if token_ok %}
+    <div class="alert alert-info small">邮件 token 校验通过（只读）。</div>
+  {% else %}
+    <div class="alert alert-warning small">需要管理员登录 token 才能处理；若你是从邮件链接进入，会自动只读展示。</div>
+  {% endif %}
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <div id="conflict-status" class="alert alert-secondary d-none mb-3"></div>
+
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold">来源行（source_row_data）</div>
+            <span id="badge-source" class="badge text-bg-light">-</span>
+          </div>
+          <pre id="source-json" class="p-3 bg-body-tertiary rounded small mb-0" style="max-height: 380px; overflow:auto;">-</pre>
+        </div>
+        <div class="col-12 col-lg-6">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="fw-semibold">目标行（target_row_data）</div>
+            <span id="badge-target" class="badge text-bg-light">-</span>
+          </div>
+          <pre id="target-json" class="p-3 bg-body-tertiary rounded small mb-0" style="max-height: 380px; overflow:auto;">-</pre>
+        </div>
+      </div>
+
+      <div id="resolve-panel" class="mt-3 d-none">
+        <div class="fw-semibold mb-2">处理方式（以哪个库为准）</div>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="resolve-mysql" class="btn btn-sm btn-outline-primary">以 MYSQL 为准</button>
+          <button id="resolve-postgres" class="btn btn-sm btn-outline-primary">以 POSTGRES 为准</button>
+          <button id="resolve-mssql" class="btn btn-sm btn-outline-primary">以 MSSQL 为准</button>
+        </div>
+        <div class="small text-muted mt-2">处理会把赢家那一侧的整行数据写回三库（updated_by_db 会标记赢家库，避免触发器回环）。</div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    window.__CONFLICT_DETAIL__ = {
+      conflictId: {{ conflict_id }},
+      token: {{ (('"' ~ t ~ '"') if t else 'null') | safe }},
+      tokenOk: {{ 'true' if token_ok else 'false' }},
+    };
+  </script>
+  <script src="/static/js/conflict_detail.js"></script>
+{% endblock %}

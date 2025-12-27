@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="page-header mb-4 text-center">
+    <div class="w-100">
+      <p class="badge rounded-pill text-bg-light mb-2">同步分析</p>
+      <h1 class="h3 fw-bold mb-2">每日同步趋势报表</h1>
+      <p class="text-muted mb-0">基于 CONTROL_DB 聚合变更与冲突，轻量查看趋势。</p>
+    </div>
+  </div>
+
+  <div class="glass-card p-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+      <div>
+        <div class="small text-muted">数据刷新</div>
+        <div id="chart-meta" class="fw-semibold">正在加载…</div>
+      </div>
+      <div class="pill-card soft">
+        <div class="small text-uppercase text-muted">展示范围</div>
+        <div class="h6 mb-0">最近 14 天</div>
+      </div>
+    </div>
+    <canvas id="chart" height="140"></canvas>
+    <div class="text-muted small mt-3">
+      数据来源：CONTROL_DB 的 change_log.processed_at 与 conflicts.created_at。
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-3">
+      <div>
+        <div class="small text-muted">&#25968;&#25454;&#24211; 7 &#24352;&#34920;</div>
+        <div class="fw-semibold">&#21508;&#21516;&#27493;&#34920;&#25968;&#25454;&#37327;&#65288;&#36817; 14 &#22825;&#65289;</div>
+      </div>
+      <div class="pill-card soft">
+        <div class="small text-uppercase text-muted">&#26742;&#29305;&#22270; &#183; &#26469;&#33258; change_log/conflicts</div>
+        <div class="h6 mb-0">&#23637;&#31034; 7 &#31867;&#35760;&#24405;</div>
+      </div>
+    </div>
+    <canvas id="table-chart-full" height="140"></canvas>
+      <div id="table-chart-empty" class="text-muted small mt-3 d-none">
+      &#26242;&#26080;&#25968;&#25454;&#65292;&#35831;&#20808;&#35302;&#21457;&#19968;&#27425;&#21516;&#27493;&#12290;
+    </div>
+    <div id="table-volume-grid" class="row row-cols-2 row-cols-md-3 g-2 mt-3">
+      <div class="text-muted small">&#27491;&#22312;&#26356;&#26032;&#21015;&#34920;&#25968;&#25454;...</div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="/static/js/report.js"></script>
+{% endblock %}
